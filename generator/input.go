@@ -2,8 +2,9 @@ package generator
 
 import (
 	"fmt"
+	"strconv"
 
-	"github.com/tcnksm/go-input"
+	input "github.com/tcnksm/go-input"
 
 	"github.com/daniel1302/vega-asistant/types"
 	"github.com/daniel1302/vega-asistant/utils"
@@ -62,4 +63,74 @@ func AskPath(ui *input.UI, name, defaultValue string) (string, error) {
 	}
 
 	return response, nil
+}
+
+func AskSQLCredentials(ui *input.UI) (*types.SQLCredentials, error) {
+	var (
+		dbHost string
+		dbUser string
+		dbPort int
+		dbPass string
+		dbName string
+
+		err error
+	)
+	for {
+		dbHost, err = ui.Ask("PostgreSQL host for the data-node", &input.Options{
+			Default:  "localhost",
+			Required: true,
+			Loop:     true,
+		})
+		if err != nil {
+			return nil, types.NewInputError(fmt.Errorf("failed to get postgresql host: %w", err))
+		}
+
+		dbPortStr, err := ui.Ask("PostgreSQL port for the data-node", &input.Options{
+			Default:  "5432",
+			Required: true,
+			Loop:     true,
+			ValidateFunc: func(s string) error {
+				if _, err := strconv.Atoi(s); err != nil {
+					return fmt.Errorf("port must be numeric: %w", err)
+				}
+
+				return nil
+			},
+		})
+		if err != nil {
+			return nil, types.NewInputError(fmt.Errorf("failed to get postgresql port: %w", err))
+		}
+
+		dbPort, err = strconv.Atoi(dbPortStr)
+		if err != nil {
+			return nil, types.NewInputError(fmt.Errorf("port must be numeric: %w", err))
+		}
+
+		dbUser, err = ui.Ask("PostgreSQL user name for the data-node", &input.Options{
+			Default:  "vega",
+			Required: true,
+			Loop:     true,
+		})
+
+		dbPass, err = ui.Ask("PostgreSQL password for the given username", &input.Options{
+			Default:  "vega",
+			Required: true,
+			Loop:     true,
+		})
+
+		dbName, err = ui.Ask("PostgreSQL database name for the data-node", &input.Options{
+			Default:  "vega",
+			Required: true,
+			Loop:     true,
+		})
+		break
+	}
+
+	return &types.SQLCredentials{
+		Host:         dbHost,
+		User:         dbUser,
+		Port:         dbPort,
+		Pass:         dbPass,
+		DatabaseName: dbName,
+	}, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -12,8 +13,23 @@ import (
 )
 
 func main() {
-	logger, _ := zap.NewProduction()
+	rawJSON := []byte(`{
+		"level": "info",
+		"outputPaths": ["stdout"],
+		"errorOutputPaths": ["stderr"],
+		"encoding": "console",
+		"encoderConfig": {
+			"messageKey": "message",
+			"levelEncoder": "lowercase"
+		}
+	}`)
+	var cfg zap.Config
+	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
+		panic(err)
+	}
+	logger := zap.Must(cfg.Build())
 	defer logger.Sync()
+
 	sugar := logger.Sugar()
 	ui := &input.UI{
 		Writer: os.Stdout,

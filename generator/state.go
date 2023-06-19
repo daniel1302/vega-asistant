@@ -25,6 +25,7 @@ const (
 	StateSelectVisorHome
 	StateSelectVegaHome
 	StateSelectTendermintHome
+	StateGetSQLCredentials
 )
 
 type StateMachine struct {
@@ -40,6 +41,7 @@ type GenerateSettings struct {
 	VegaHome       string
 	TendermintHome string
 	DataNodeHome   string
+	SQLCredentials types.SQLCredentials
 }
 
 func NewStateMachine() StateMachine {
@@ -96,8 +98,11 @@ STATE_RUN:
 				return fmt.Errorf("failed getting tendermint home: %w", err)
 			}
 			state.Settings.TendermintHome = tendermintHome
-			break STATE_RUN
+			state.CurrentState = StateGetSQLCredentials
 
+		case StateGetSQLCredentials:
+
+			break STATE_RUN
 		}
 	}
 	return nil

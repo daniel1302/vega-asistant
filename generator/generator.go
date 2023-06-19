@@ -30,7 +30,7 @@ func NewDataNodeGenerator(
 	}, nil
 }
 
-func (gen *DataNodeGenerator) Run(logger zap.Logger) error {
+func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 	// TODO: add validation for network config and user settings
 
 	logger.Info("DDD")
