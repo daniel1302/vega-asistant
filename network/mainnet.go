@@ -1,6 +1,8 @@
 package network
 
 type NetworkConfig struct {
+	GenesisVersion       string
+	Repository           string
 	DataNodesRESTUrls    []string
 	TendermintSeeds      []string
 	BootstrapPeers       []string
@@ -9,6 +11,8 @@ type NetworkConfig struct {
 
 func MainnetConfig() NetworkConfig {
 	return NetworkConfig{
+		GenesisVersion: "v0.71.4",
+		Repository:     "vegaprotocol/vega",
 		DataNodesRESTUrls: []string{
 			"https://api0.vega.community",
 			"https://api1.vega.community",
