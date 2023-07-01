@@ -6,19 +6,19 @@ name: Release vega, data-node, vegawallet and visor binaries
     tags:
       - "v*"
 
-  jobs:
-    release:
-      name: "Release for ${{ matrix.os }}-${{ matrix.arch }}"
-      strategy:
-        matrix:
-          arch: [amd64, arm64]
-          os: [linux, darwin]
-      env:
-        GOOS: ${{ matrix.os }}
-        GOARCH: ${{ matrix.arch }}
-        CGO_ENABLED: 0
+jobs:
+  release:
+    name: "Release for ${{ matrix.os }}-${{ matrix.arch }}"
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        os: [linux, darwin]
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+      CGO_ENABLED: 0
 
-      steps:
+    steps:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
