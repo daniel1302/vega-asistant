@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/daniel1302/vega-asistant/utils"
 )
 
 type ArtifactType string
@@ -59,5 +61,14 @@ func DownloadArtifact(
 		)
 	}
 
-	return filePath, nil
+	if err := utils.Unzip(filePath, outputDir); err != nil {
+		return "", fmt.Errorf("failed to unzip downloaded artifact(%s): %w", filePath, err)
+	}
+
+	binaryPath := filepath.Join(outputDir, string(artifactType))
+	if err := os.Chmod(binaryPath, os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to change permissions mod for binary %s: %w", binaryPath, err)
+	}
+
+	return binaryPath, nil
 }

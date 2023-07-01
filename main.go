@@ -37,7 +37,7 @@ func main() {
 	}
 
 	state := generator.NewStateMachine()
-	err := state.Run(ui)
+	err := state.Run(ui, network.MainnetConfig())
 	if err != nil {
 		panic(fmt.Errorf("failed to generate data-node: %w", err))
 	}

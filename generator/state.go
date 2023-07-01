@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,10 +33,14 @@ const (
 const (
 	StateSelectStartupMode State = iota
 	StateSelectVisorHome
+	StateExistingVisorHome
 	StateSelectVegaHome
+	StateExistingVegaHome
 	StateSelectTendermintHome
+	StateExistingTendermintHome
 	StateGetSQLCredentials
 	StateCheckLatestVersion
+	StateGetTrustBlock
 	StateSummary
 )
 
@@ -54,6 +60,7 @@ type GenerateSettings struct {
 	MainnetVersion string
 	MainnetChainId string
 	SQLCredentials types.SQLCredentials
+	LatestSnapshot types.CoreSnapshot
 }
 
 func DefaultGenerateSettings() GenerateSettings {
@@ -89,7 +96,7 @@ func (state StateMachine) Dump() string {
 	return string(result)
 }
 
-func (state *StateMachine) Run(ui *input.UI) error {
+func (state *StateMachine) Run(ui *input.UI, networkConfig network.NetworkConfig) error {
 STATE_RUN:
 	for {
 		switch state.CurrentState {
@@ -108,6 +115,26 @@ STATE_RUN:
 			}
 
 			state.Settings.VisorHome = visorHome
+			if utils.FileExists(visorHome) {
+				state.CurrentState = StateExistingVisorHome
+			} else {
+				state.CurrentState = StateSelectVegaHome
+			}
+
+		case StateExistingVisorHome:
+			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.VisorHome, AnswerYes)
+			if err != nil {
+				return fmt.Errorf("failed to get answer for remove existing visor home: %w", err)
+			}
+
+			if removeAnswer == AnswerNo {
+				return fmt.Errorf("visor home exists. You must provide different visor home or remove it")
+			}
+
+			if err := os.RemoveAll(state.Settings.VisorHome); err != nil {
+				return fmt.Errorf("failed to remove vegavisor home: %w", err)
+			}
+
 			state.CurrentState = StateSelectVegaHome
 
 		case StateSelectVegaHome:
@@ -117,6 +144,27 @@ STATE_RUN:
 			}
 			state.Settings.VegaHome = vegaHome
 			state.Settings.DataNodeHome = vegaHome
+
+			if utils.FileExists(vegaHome) {
+				state.CurrentState = StateExistingVegaHome
+			} else {
+				state.CurrentState = StateSelectTendermintHome
+			}
+
+		case StateExistingVegaHome:
+			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.VegaHome, AnswerYes)
+			if err != nil {
+				return fmt.Errorf("failed to get answer for remove existing vega home: %w", err)
+			}
+
+			if removeAnswer == AnswerNo {
+				return fmt.Errorf("vega home exists. You must provide different vega home or remove it")
+			}
+
+			if err := os.RemoveAll(state.Settings.VegaHome); err != nil {
+				return fmt.Errorf("failed to remove vega home: %w", err)
+			}
+
 			state.CurrentState = StateSelectTendermintHome
 
 		case StateSelectTendermintHome:
@@ -125,6 +173,27 @@ STATE_RUN:
 				return fmt.Errorf("failed getting tendermint home: %w", err)
 			}
 			state.Settings.TendermintHome = tendermintHome
+
+			if utils.FileExists(tendermintHome) {
+				state.CurrentState = StateExistingTendermintHome
+			} else {
+				state.CurrentState = StateGetSQLCredentials
+			}
+
+		case StateExistingTendermintHome:
+			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.TendermintHome, AnswerYes)
+			if err != nil {
+				return fmt.Errorf("failed to get answer for remove existing tendermint home: %w", err)
+			}
+
+			if removeAnswer == AnswerNo {
+				return fmt.Errorf("tendermint home exists. You must provide different tendermint home or remove it")
+			}
+
+			if err := os.RemoveAll(state.Settings.TendermintHome); err != nil {
+				return fmt.Errorf("failed to remove tendermint home: %w", err)
+			}
+
 			state.CurrentState = StateGetSQLCredentials
 
 		case StateGetSQLCredentials:
@@ -136,17 +205,38 @@ STATE_RUN:
 			state.CurrentState = StateCheckLatestVersion
 
 		case StateCheckLatestVersion:
-			statisticsResponse, err := vegaapi.Statistics(network.MainnetConfig().DataNodesRESTUrls)
+			statisticsResponse, err := vegaapi.Statistics(networkConfig.DataNodesRESTUrls)
 			if err != nil {
 				return fmt.Errorf("failed to get response for the /statistics endpoint from the mainnet servers: %w", err)
 			}
 			if state.Settings.Mode == StartFromBlock0 {
-				state.Settings.MainnetVersion = network.MainnetConfig().GenesisVersion
+				state.Settings.MainnetVersion = networkConfig.GenesisVersion
 			} else {
 				state.Settings.MainnetVersion = statisticsResponse.Statistics.AppVersion
 			}
 
 			state.Settings.MainnetChainId = statisticsResponse.Statistics.ChainID
+			state.CurrentState = StateGetTrustBlock
+
+		case StateGetTrustBlock:
+			if state.Settings.Mode == StartFromNetworkHistory {
+				snapshots, err := vegaapi.Snapshots(networkConfig.DataNodesRESTUrls)
+				if err != nil {
+					return fmt.Errorf("failed to get core snapshot for trusted block: %w", err)
+				}
+
+				highestBlock := 0
+				for idx, snapshot := range snapshots.CoreSnapshots.Edges {
+					blockInt, err := strconv.Atoi(snapshot.Node.BlockHeight)
+					if err != nil {
+						return fmt.Errorf("failed to convert block height from string to int: %w", err)
+					}
+					if blockInt > highestBlock {
+						state.Settings.LatestSnapshot = snapshots.CoreSnapshots.Edges[idx].Node
+					}
+				}
+			}
+
 			state.CurrentState = StateSummary
 
 		case StateSummary:

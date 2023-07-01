@@ -198,6 +198,18 @@ func AskSQLCredentials(
 	}, nil
 }
 
+func AskRemoveExistingFile(
+	ui *input.UI,
+	filePath string,
+	defaultAnswer YesNoAnswer,
+) (YesNoAnswer, error) {
+	return AskYesNo(
+		ui,
+		fmt.Sprintf("File %s exists. Do you want to remove it?", filePath),
+		defaultAnswer,
+	)
+}
+
 func AskYesNo(ui *input.UI, question string, defaultAnswer YesNoAnswer) (YesNoAnswer, error) {
 	answer, err := ui.Ask(question,
 		&input.Options{
