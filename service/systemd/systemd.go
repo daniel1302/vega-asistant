@@ -50,6 +50,10 @@ func PrepareSystemd(logger *zap.SugaredLogger, visorHome string) error {
 	}
 
 	systemdServiceContent, err := templateSystemdService(visorHome, ownerUser, ownerGroup)
+	if err != nil {
+		return fmt.Errorf("failed to template systemd service: %w", err)
+	}
+
 	if currentUser != "root" || utils.IsWSL() {
 		fmt.Println(systemdServiceContent)
 		return nil
@@ -59,6 +63,12 @@ func PrepareSystemd(logger *zap.SugaredLogger, visorHome string) error {
 	if err := os.WriteFile(serviceFilePath, []byte(systemdServiceContent), os.ModePerm); err != nil {
 		return fmt.Errorf("failed to update %s file: %w", serviceFilePath, err)
 	}
+
+	logger.Info("Calling systemctl daemon-reload")
+	if _, err := utils.ExecuteBinary("systemctl", []string{"daemon-reload"}, nil); err != nil {
+		return fmt.Errorf("failed to call systemctl daemon-reload: %w", err)
+	}
+	logger.Info("Daemons reloaded")
 	return nil
 }
 

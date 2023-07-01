@@ -206,7 +206,7 @@ func PrintInstructions(visorHome string) {
 	fmt.Printf(`
     The data node is initialized. You can now start it with the following command:
 
-      %s/visor --home %s
+      %s/visor run --home %s
 
     After node is running and it is moving block forwards do not forget to execute the following command. It is very important otherwise your node will be wiped every restart!
 
@@ -214,7 +214,7 @@ func PrintInstructions(visorHome string) {
 
     You can also setup systemd service if you running your node on LINUX with the following command:
 
-      sudo vega-asistant setup systemd
+      sudo vega-asistant setup systemd --visor-home %s
 
-    You must call the above command as a root user otherwise you will get instructions for manual systemd setup.`, visorHome, visorHome)
+    You must call the above command as a root user otherwise you will get instructions for manual systemd setup.`, visorHome, visorHome, visorHome)
 }
