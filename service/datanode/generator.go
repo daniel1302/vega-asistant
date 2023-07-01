@@ -10,10 +10,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/daniel1302/vega-asistant/github"
-	"github.com/daniel1302/vega-asistant/network"
-	"github.com/daniel1302/vega-asistant/utils"
-	"github.com/daniel1302/vega-asistant/vegacmd"
+	"github.com/daniel1302/vega-assistant/github"
+	"github.com/daniel1302/vega-assistant/network"
+	"github.com/daniel1302/vega-assistant/utils"
+	"github.com/daniel1302/vega-assistant/vegacmd"
 )
 
 type DataNodeGenerator struct {

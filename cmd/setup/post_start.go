@@ -8,7 +8,7 @@ import (
 	"github.com/tcnksm/go-input"
 	"go.uber.org/zap"
 
-	service "github.com/daniel1302/vega-asistant/service/poststart"
+	service "github.com/daniel1302/vega-assistant/service/poststart"
 )
 
 type PostStartArgs struct {

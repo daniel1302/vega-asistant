@@ -7,7 +7,7 @@ import (
 
 	"github.com/tcnksm/go-input"
 
-	"github.com/daniel1302/vega-asistant/types"
+	"github.com/daniel1302/vega-assistant/types"
 )
 
 type YesNoAnswer string

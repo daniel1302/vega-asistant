@@ -3,7 +3,7 @@ package vegacmd
 import (
 	"fmt"
 
-	"github.com/daniel1302/vega-asistant/utils"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 func InitDataNode(binaryPath, vegaHome string, chainId string) error {

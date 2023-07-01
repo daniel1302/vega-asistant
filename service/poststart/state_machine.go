@@ -6,8 +6,8 @@ import (
 
 	"github.com/tcnksm/go-input"
 
-	"github.com/daniel1302/vega-asistant/uilib"
-	"github.com/daniel1302/vega-asistant/utils"
+	"github.com/daniel1302/vega-assistant/uilib"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 type State int

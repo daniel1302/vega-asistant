@@ -8,8 +8,8 @@ import (
 	"github.com/tcnksm/go-input"
 	"go.uber.org/zap"
 
-	"github.com/daniel1302/vega-asistant/network"
-	service "github.com/daniel1302/vega-asistant/service/datanode"
+	"github.com/daniel1302/vega-assistant/network"
+	service "github.com/daniel1302/vega-assistant/service/datanode"
 )
 
 type SetupDataNodeArgs struct {

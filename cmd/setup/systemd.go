@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	service "github.com/daniel1302/vega-asistant/service/systemd"
-	"github.com/daniel1302/vega-asistant/utils"
+	service "github.com/daniel1302/vega-assistant/service/systemd"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 type SystemdArgs struct {

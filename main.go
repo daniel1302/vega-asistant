@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/daniel1302/vega-asistant/cmd"
-	"github.com/daniel1302/vega-asistant/cmd/setup"
+	"github.com/daniel1302/vega-assistant/cmd"
+	"github.com/daniel1302/vega-assistant/cmd/setup"
 )
 
 func init() {

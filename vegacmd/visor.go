@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/daniel1302/vega-asistant/utils"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 const VisorRunConfigTemplate = `name = "{{.Version}}"

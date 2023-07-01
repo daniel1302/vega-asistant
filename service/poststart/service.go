@@ -6,8 +6,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/daniel1302/vega-asistant/utils"
-	"github.com/daniel1302/vega-asistant/vegacmd"
+	"github.com/daniel1302/vega-assistant/utils"
+	"github.com/daniel1302/vega-assistant/vegacmd"
 )
 
 func UpdateConfig(logger *zap.SugaredLogger, vegaHome, tendermintHome string) error {

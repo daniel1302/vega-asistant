@@ -3,7 +3,7 @@ package setup
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/daniel1302/vega-asistant/cmd"
+	"github.com/daniel1302/vega-assistant/cmd"
 )
 
 type SetupArgs struct {

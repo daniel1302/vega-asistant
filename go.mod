@@ -1,4 +1,4 @@
-module github.com/daniel1302/vega-asistant
+module github.com/daniel1302/vega-assistant
 
 go 1.19
 

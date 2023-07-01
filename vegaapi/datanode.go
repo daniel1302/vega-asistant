@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/daniel1302/vega-asistant/types"
+	"github.com/daniel1302/vega-assistant/types"
 )
 
 func httpCall(requestURL string, endpoint string) ([]byte, error) {

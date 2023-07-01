@@ -9,7 +9,7 @@ import (
 	"github.com/rodaine/table"
 	input "github.com/tcnksm/go-input"
 
-	"github.com/daniel1302/vega-asistant/types"
+	"github.com/daniel1302/vega-assistant/types"
 )
 
 func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, error) {
@@ -210,11 +210,11 @@ func PrintInstructions(visorHome string) {
 
     After node is running and it is moving block forwards do not forget to execute the following command. It is very important otherwise your node will be wiped every restart!
 
-      vega-asistant setup post-start
+      vega-assistant setup post-start
 
     You can also setup systemd service if you running your node on LINUX with the following command:
 
-      sudo vega-asistant setup systemd --visor-home %s
+      sudo vega-assistant setup systemd --visor-home %s
 
     You must call the above command as a root user otherwise you will get instructions for manual systemd setup.`, visorHome, visorHome, visorHome)
 }

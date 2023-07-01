@@ -3,7 +3,7 @@ package systemd
 import (
 	"fmt"
 
-	"github.com/daniel1302/vega-asistant/utils"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 func PrintInstructions() {

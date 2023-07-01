@@ -14,11 +14,11 @@ import (
 	"github.com/tcnksm/go-input"
 	"golang.org/x/mod/semver"
 
-	"github.com/daniel1302/vega-asistant/network"
-	"github.com/daniel1302/vega-asistant/types"
-	"github.com/daniel1302/vega-asistant/uilib"
-	"github.com/daniel1302/vega-asistant/utils"
-	"github.com/daniel1302/vega-asistant/vegaapi"
+	"github.com/daniel1302/vega-assistant/network"
+	"github.com/daniel1302/vega-assistant/types"
+	"github.com/daniel1302/vega-assistant/uilib"
+	"github.com/daniel1302/vega-assistant/utils"
+	"github.com/daniel1302/vega-assistant/vegaapi"
 )
 
 type (

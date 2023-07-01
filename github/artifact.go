@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/daniel1302/vega-asistant/utils"
+	"github.com/daniel1302/vega-assistant/utils"
 )
 
 type ArtifactType string
