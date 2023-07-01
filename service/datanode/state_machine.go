@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,7 +40,6 @@ const (
 	StateExistingTendermintHome
 	StateGetSQLCredentials
 	StateCheckLatestVersion
-	StateGetTrustBlock
 	StateSummary
 )
 
@@ -61,7 +59,6 @@ type GenerateSettings struct {
 	MainnetVersion string
 	MainnetChainId string
 	SQLCredentials types.SQLCredentials
-	LatestSnapshot types.CoreSnapshot
 }
 
 func DefaultGenerateSettings() GenerateSettings {
@@ -217,27 +214,6 @@ STATE_RUN:
 			}
 
 			state.Settings.MainnetChainId = statisticsResponse.Statistics.ChainID
-			state.CurrentState = StateGetTrustBlock
-
-		case StateGetTrustBlock:
-			if state.Settings.Mode == StartFromNetworkHistory {
-				snapshots, err := vegaapi.Snapshots(networkConfig.DataNodesRESTUrls)
-				if err != nil {
-					return fmt.Errorf("failed to get core snapshot for trusted block: %w", err)
-				}
-
-				highestBlock := 0
-				for idx, snapshot := range snapshots.CoreSnapshots.Edges {
-					blockInt, err := strconv.Atoi(snapshot.Node.BlockHeight)
-					if err != nil {
-						return fmt.Errorf("failed to convert block height from string to int: %w", err)
-					}
-					if blockInt > highestBlock {
-						state.Settings.LatestSnapshot = snapshots.CoreSnapshots.Edges[idx].Node
-					}
-				}
-			}
-
 			state.CurrentState = StateSummary
 
 		case StateSummary:

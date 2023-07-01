@@ -92,3 +92,12 @@ func Snapshots(urls []string) (*types.CoreSnapshots, error) {
 
 	return &result, nil
 }
+
+func NetworkHistorySegments(urls []string) (*types.NetworkHistorySegments, error) {
+	result := types.NetworkHistorySegments{}
+	if err := getRestApiResponse(urls, "/api/v2/networkhistory/segments", &result); err != nil {
+		return nil, fmt.Errorf("failed to get network history segments: %w", err)
+	}
+
+	return &result, nil
+}

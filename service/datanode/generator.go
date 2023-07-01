@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -12,7 +13,9 @@ import (
 
 	"github.com/daniel1302/vega-assistant/github"
 	"github.com/daniel1302/vega-assistant/network"
+	"github.com/daniel1302/vega-assistant/types"
 	"github.com/daniel1302/vega-assistant/utils"
+	"github.com/daniel1302/vega-assistant/vegaapi"
 	"github.com/daniel1302/vega-assistant/vegacmd"
 )
 
@@ -86,7 +89,12 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 		return fmt.Errorf("failed to copy binaries to visor home: %w", err)
 	}
 
-	if err := gen.updateConfigs(logger); err != nil {
+	restartSnapshot, err := gen.selectSnapshotForRestart(logger)
+	if err != nil {
+		return fmt.Errorf("failed to select snapshot for restart: %w", err)
+	}
+
+	if err := gen.updateConfigs(logger, restartSnapshot); err != nil {
 		return fmt.Errorf("failed to update config files for the node: %w", err)
 	}
 
@@ -179,7 +187,10 @@ func (gen *DataNodeGenerator) prepareVisorHome(logger *zap.SugaredLogger) error 
 	return nil
 }
 
-func (gen *DataNodeGenerator) updateConfigs(logger *zap.SugaredLogger) error {
+func (gen *DataNodeGenerator) updateConfigs(
+	logger *zap.SugaredLogger,
+	restartSnapshot *types.CoreSnapshot,
+) error {
 	dataNodeConfig := map[string]interface{}{
 		"SQLStore.ConnectionConfig.Host":      gen.userSettings.SQLCredentials.Host,
 		"SQLStore.ConnectionConfig.Port":      gen.userSettings.SQLCredentials.Port,
@@ -221,21 +232,28 @@ func (gen *DataNodeGenerator) updateConfigs(logger *zap.SugaredLogger) error {
 	}
 
 	if gen.userSettings.Mode == StartFromNetworkHistory {
-		if gen.userSettings.LatestSnapshot.BlockHash == "" {
+		if restartSnapshot == nil {
+			return fmt.Errorf(
+				"failed to start node from network history: no selected snapshot for restart",
+			)
+		}
+
+		if restartSnapshot.BlockHash == "" {
 			return fmt.Errorf(
 				"cannot start vega from the network-history when latest snapshot is empty",
 			)
 		}
 
-		trustHeight, err := strconv.Atoi(gen.userSettings.LatestSnapshot.BlockHeight)
+		trustHeight, err := strconv.Atoi(restartSnapshot.BlockHeight)
 		if err != nil {
 			return fmt.Errorf("failed to convert trust block height from string to int: %w", err)
 		}
 
+		vegaConfig["Snapshot.StartHeight"] = trustHeight
 		dataNodeConfig["AutoInitialiseFromNetworkHistory"] = true
 		tendermintConfig["statesync.enable"] = true
 		tendermintConfig["statesync.trust_height"] = trustHeight
-		tendermintConfig["statesync.trust_hash"] = gen.userSettings.LatestSnapshot.BlockHash
+		tendermintConfig["statesync.trust_hash"] = restartSnapshot.BlockHash
 	}
 
 	dataNodeConfigPath := filepath.Join(gen.userSettings.DataNodeHome, vegacmd.DataNodeConfigPath)
@@ -282,6 +300,116 @@ func (gen *DataNodeGenerator) updateConfigs(logger *zap.SugaredLogger) error {
 	logger.Info("Vegavisor config updated")
 
 	return nil
+}
+
+func (gen *DataNodeGenerator) selectSnapshotForRestart(
+	logger *zap.SugaredLogger,
+) (*types.CoreSnapshot, error) {
+	if gen.userSettings.Mode != StartFromNetworkHistory {
+		return &types.CoreSnapshot{}, nil
+	}
+
+	logger.Info("Fetching network snapshots")
+	snapshots, err := vegaapi.Snapshots(gen.networkConfig.DataNodesRESTUrls)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get core snapshot for trusted block: %w", err)
+	}
+
+	logger.Infof("Found %d snapshots", len(snapshots.CoreSnapshots.Edges))
+	if len(snapshots.CoreSnapshots.Edges) < 3 {
+		return nil, fmt.Errorf(
+			"not enough snapshots for restart: required at least 3 snapshots, %d got",
+			len(snapshots.CoreSnapshots.Edges),
+		)
+	}
+
+	logger.Info("Fetching network history segments")
+	segments, err := vegaapi.NetworkHistorySegments(gen.networkConfig.DataNodesRESTUrls)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get network-history segments: %w", err)
+	}
+
+	logger.Infof("Found %d network-history segments", len(segments.Segments))
+	if len(segments.Segments) < 3 {
+		return nil, fmt.Errorf(
+			"not enough network history segments for restart: required at least 3 segments, %d got",
+			len(segments.Segments),
+		)
+	}
+
+	logger.Info("Finding snapshot for restart")
+	snapshotList := []types.CoreSnapshot{}
+	for _, snapshot := range snapshots.CoreSnapshots.Edges {
+		// cut the invalid snapshots out
+		if snapshot.Node.BlockHash == "" || snapshot.Node.BlockHeight == "" {
+			continue
+		}
+
+		snapshotList = append(snapshotList, snapshot.Node)
+	}
+
+	segmentList := []types.NetworkHistorySegment{}
+	for _, segment := range segments.Segments {
+		if segment.ToHeight == "" {
+			continue
+		}
+
+		segmentList = append(segmentList, segment)
+	}
+
+	// sort lists from the highest to the lowest
+	sort.Slice(snapshotList, func(i, j int) bool {
+		iHeight, _ := strconv.Atoi(snapshotList[i].BlockHeight)
+		jHeight, _ := strconv.Atoi(snapshotList[j].BlockHeight)
+
+		return iHeight > jHeight
+	})
+
+	sort.Slice(segmentList, func(i, j int) bool {
+		iHeight, _ := strconv.Atoi(segmentList[i].ToHeight)
+		jHeight, _ := strconv.Atoi(segmentList[j].ToHeight)
+
+		return iHeight > jHeight
+	})
+
+	if len(snapshotList) < 3 {
+		return nil, fmt.Errorf("not enough snapshots for restart after filtering")
+	}
+
+	if len(segmentList) < 3 {
+		return nil, fmt.Errorf("not enough segments for restart after filtering")
+	}
+
+	// select 3-rd highest segment for restart(latest segments may noy be published to the IPFS yet)
+	selectedSegment := segmentList[2]
+	selectedSegmentHeight, err := strconv.Atoi(selectedSegment.ToHeight)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert height for selected segment to int: %w", err)
+	}
+
+	var selectedSnapshot *types.CoreSnapshot
+	// select first snapshot with lower or equal block than 3-rd highest segment
+	for idx, snapshot := range snapshotList {
+		snapshotHeight, err := strconv.Atoi(snapshot.BlockHeight)
+		if err != nil {
+			continue // TODO: Maybe we should handle it???
+		}
+		if snapshotHeight <= selectedSegmentHeight {
+			selectedSnapshot = &snapshotList[idx]
+			break
+		}
+	}
+
+	if selectedSnapshot == nil {
+		return nil, fmt.Errorf(
+			"failed to find snapshot lower than block %s (3-rd highest segment)",
+			selectedSegment.ToHeight,
+		)
+	}
+
+	logger.Info("Selected snapshot for restart at block %s", selectedSnapshot.BlockHeight)
+
+	return selectedSnapshot, nil
 }
 
 func (gen *DataNodeGenerator) initNode(

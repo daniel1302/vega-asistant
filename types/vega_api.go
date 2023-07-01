@@ -20,3 +20,13 @@ type CoreSnapshots struct {
 		} `json:"edges"`
 	} `json:"coreSnapshots"`
 }
+
+type NetworkHistorySegment struct {
+	FromHeight       string `json:"fromHeight"`
+	ToHeight         string `json:"toHeight"`
+	HistorySegmentId string `json:"historySegmentId"`
+}
+
+type NetworkHistorySegments struct {
+	Segments []NetworkHistorySegment `json:"segments"`
+}
