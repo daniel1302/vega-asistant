@@ -22,4 +22,5 @@ func init() {
 	setupArgs.RootArgs = &cmd.Args
 
 	RootCmd.AddCommand(dataNodeCmd)
+	RootCmd.AddCommand(postgresqlDockerComposeCmd)
 }

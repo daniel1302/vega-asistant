@@ -16,6 +16,7 @@ import (
 
 	"github.com/daniel1302/vega-asistant/network"
 	"github.com/daniel1302/vega-asistant/types"
+	"github.com/daniel1302/vega-asistant/uilib"
 	"github.com/daniel1302/vega-asistant/utils"
 	"github.com/daniel1302/vega-asistant/vegaapi"
 )
@@ -109,7 +110,7 @@ STATE_RUN:
 			state.CurrentState = StateSelectVisorHome
 
 		case StateSelectVisorHome:
-			visorHome, err := AskPath(ui, "vegavisor home", state.Settings.VisorHome)
+			visorHome, err := uilib.AskPath(ui, "vegavisor home", state.Settings.VisorHome)
 			if err != nil {
 				return fmt.Errorf("failed getting vegavisor home: %w", err)
 			}
@@ -122,12 +123,12 @@ STATE_RUN:
 			}
 
 		case StateExistingVisorHome:
-			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.VisorHome, AnswerYes)
+			removeAnswer, err := uilib.AskRemoveExistingFile(ui, state.Settings.VisorHome, uilib.AnswerYes)
 			if err != nil {
 				return fmt.Errorf("failed to get answer for remove existing visor home: %w", err)
 			}
 
-			if removeAnswer == AnswerNo {
+			if removeAnswer == uilib.AnswerNo {
 				return fmt.Errorf("visor home exists. You must provide different visor home or remove it")
 			}
 
@@ -138,7 +139,7 @@ STATE_RUN:
 			state.CurrentState = StateSelectVegaHome
 
 		case StateSelectVegaHome:
-			vegaHome, err := AskPath(ui, "vega home", state.Settings.VegaHome)
+			vegaHome, err := uilib.AskPath(ui, "vega home", state.Settings.VegaHome)
 			if err != nil {
 				return fmt.Errorf("failed getting vega home: %w", err)
 			}
@@ -152,12 +153,12 @@ STATE_RUN:
 			}
 
 		case StateExistingVegaHome:
-			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.VegaHome, AnswerYes)
+			removeAnswer, err := uilib.AskRemoveExistingFile(ui, state.Settings.VegaHome, uilib.AnswerYes)
 			if err != nil {
 				return fmt.Errorf("failed to get answer for remove existing vega home: %w", err)
 			}
 
-			if removeAnswer == AnswerNo {
+			if removeAnswer == uilib.AnswerNo {
 				return fmt.Errorf("vega home exists. You must provide different vega home or remove it")
 			}
 
@@ -168,7 +169,7 @@ STATE_RUN:
 			state.CurrentState = StateSelectTendermintHome
 
 		case StateSelectTendermintHome:
-			tendermintHome, err := AskPath(ui, "tendermint home", state.Settings.TendermintHome)
+			tendermintHome, err := uilib.AskPath(ui, "tendermint home", state.Settings.TendermintHome)
 			if err != nil {
 				return fmt.Errorf("failed getting tendermint home: %w", err)
 			}
@@ -181,12 +182,12 @@ STATE_RUN:
 			}
 
 		case StateExistingTendermintHome:
-			removeAnswer, err := AskRemoveExistingFile(ui, state.Settings.TendermintHome, AnswerYes)
+			removeAnswer, err := uilib.AskRemoveExistingFile(ui, state.Settings.TendermintHome, uilib.AnswerYes)
 			if err != nil {
 				return fmt.Errorf("failed to get answer for remove existing tendermint home: %w", err)
 			}
 
-			if removeAnswer == AnswerNo {
+			if removeAnswer == uilib.AnswerNo {
 				return fmt.Errorf("tendermint home exists. You must provide different tendermint home or remove it")
 			}
 
@@ -242,12 +243,12 @@ STATE_RUN:
 		case StateSummary:
 			printSummary(state.Settings)
 
-			correctResponse, err := AskYesNo(ui, "Is it correct?", AnswerYes)
+			correctResponse, err := uilib.AskYesNo(ui, "Is it correct?", uilib.AnswerYes)
 			if err != nil {
 				return fmt.Errorf("failed asking for correct summary: %w", err)
 			}
 
-			if correctResponse == AnswerNo {
+			if correctResponse == uilib.AnswerNo {
 				state.CurrentState = StateSelectStartupMode
 				break
 			}

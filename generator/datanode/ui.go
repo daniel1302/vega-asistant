@@ -10,14 +10,6 @@ import (
 	input "github.com/tcnksm/go-input"
 
 	"github.com/daniel1302/vega-asistant/types"
-	"github.com/daniel1302/vega-asistant/utils"
-)
-
-type YesNoAnswer string
-
-const (
-	AnswerYes YesNoAnswer = "Yes"
-	AnswerNo  YesNoAnswer = "No"
 )
 
 func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, error) {
@@ -51,28 +43,6 @@ func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, er
 	}
 
 	return &result, nil
-}
-
-func AskPath(ui *input.UI, name, defaultValue string) (string, error) {
-	response, err := ui.Ask(fmt.Sprintf("What is your %s", name), &input.Options{
-		Default:  defaultValue,
-		Required: true,
-		Loop:     true,
-		ValidateFunc: func(s string) error {
-			if utils.FileExists(s) {
-				return fmt.Errorf(
-					"given path exists on your fs, remove this file or provide another directory",
-				)
-			}
-
-			return nil
-		},
-	})
-	if err != nil {
-		return "", types.NewInputError(err)
-	}
-
-	return response, nil
 }
 
 func AskSQLCredentials(
@@ -196,44 +166,6 @@ func AskSQLCredentials(
 		Pass:         dbPass,
 		DatabaseName: dbName,
 	}, nil
-}
-
-func AskRemoveExistingFile(
-	ui *input.UI,
-	filePath string,
-	defaultAnswer YesNoAnswer,
-) (YesNoAnswer, error) {
-	return AskYesNo(
-		ui,
-		fmt.Sprintf("File %s exists. Do you want to remove it?", filePath),
-		defaultAnswer,
-	)
-}
-
-func AskYesNo(ui *input.UI, question string, defaultAnswer YesNoAnswer) (YesNoAnswer, error) {
-	answer, err := ui.Ask(question,
-		&input.Options{
-			Default:  string(defaultAnswer),
-			Required: true,
-			Loop:     true,
-			ValidateFunc: func(s string) error {
-				normalizedResponse := strings.ToLower(s)
-				if normalizedResponse != "yes" && normalizedResponse != "no" {
-					return fmt.Errorf("invalid response; got %s, expected Yes or No", s)
-				}
-				return nil
-			},
-		},
-	)
-	if err != nil {
-		return defaultAnswer, fmt.Errorf("failed to ask for yes/no: %w", err)
-	}
-
-	if strings.ToLower(answer) == "yes" {
-		return AnswerYes, nil
-	}
-
-	return AnswerNo, nil
 }
 
 func printSummary(settings GenerateSettings) {
