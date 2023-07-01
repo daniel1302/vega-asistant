@@ -25,7 +25,10 @@ func Unzip(archiveFilePath, dst string) error {
 			)
 		}
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(filePath, os.ModePerm)
+			err := os.MkdirAll(filePath, os.ModePerm)
+			if err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", filePath, err)
+			}
 			continue
 		}
 
@@ -35,7 +38,7 @@ func Unzip(archiveFilePath, dst string) error {
 
 		dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
-			fmt.Errorf("failed to open buffer for file %s: %w", filePath, err)
+			return fmt.Errorf("failed to open buffer for file %s: %w", filePath, err)
 		}
 
 		fileInArchive, err := f.Open()

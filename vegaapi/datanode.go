@@ -83,3 +83,12 @@ func Statistics(urls []string) (*types.VegaStatistics, error) {
 
 	return &result, nil
 }
+
+func Snapshots(urls []string) (*types.CoreSnapshots, error) {
+	result := types.CoreSnapshots{}
+	if err := getRestApiResponse(urls, "/api/v2/snapshots", &result); err != nil {
+		return nil, fmt.Errorf("failed to get core snapshots: %w", err)
+	}
+
+	return &result, nil
+}
