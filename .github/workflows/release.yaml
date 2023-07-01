@@ -9,6 +9,7 @@ name: Release vega, data-node, vegawallet and visor binaries
 jobs:
   release:
     name: "Release for ${{ matrix.os }}-${{ matrix.arch }}"
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         arch: [amd64, arm64]
