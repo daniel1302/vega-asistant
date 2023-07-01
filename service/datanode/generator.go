@@ -259,7 +259,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 	dataNodeConfigPath := filepath.Join(gen.userSettings.DataNodeHome, vegacmd.DataNodeConfigPath)
 	logger.Infof(
 		"Updating data-node config(%s). New parameters: %v",
-		&dataNodeConfigPath,
+		dataNodeConfigPath,
 		dataNodeConfig,
 	)
 	if err := utils.UpdateConfig(dataNodeConfigPath, "toml", dataNodeConfig); err != nil {
@@ -407,7 +407,7 @@ func (gen *DataNodeGenerator) selectSnapshotForRestart(
 		)
 	}
 
-	logger.Info("Selected snapshot for restart at block %s", selectedSnapshot.BlockHeight)
+	logger.Infof("Selected snapshot for restart at block %s", selectedSnapshot.BlockHeight)
 
 	return selectedSnapshot, nil
 }
