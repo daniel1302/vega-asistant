@@ -1,4 +1,4 @@
-package generator
+package datanode
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/daniel1302/vega-asistant/github"
 	"github.com/daniel1302/vega-asistant/network"
 	"github.com/daniel1302/vega-asistant/utils"
 	"github.com/daniel1302/vega-asistant/vegacmd"
@@ -38,11 +39,11 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 	//	defer os.RemoveAll(outputDir)
 
 	logger.Info("Downloading vega binary")
-	vegaBinaryPath, err := DownloadArtifact(
+	vegaBinaryPath, err := github.DownloadArtifact(
 		gen.networkConfig.Repository,
 		gen.userSettings.MainnetVersion,
 		outputDir,
-		ArtifactVega,
+		github.ArtifactVega,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to download vega binary: %w", err)
@@ -50,11 +51,11 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 	logger.Infof("Vega downloaded to %s", vegaBinaryPath)
 
 	logger.Info("Downloading visor binary")
-	visorBinaryPath, err := DownloadArtifact(
+	visorBinaryPath, err := github.DownloadArtifact(
 		gen.networkConfig.Repository,
 		gen.userSettings.MainnetVersion,
 		outputDir,
-		ArtifactVisor,
+		github.ArtifactVisor,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to download visor binary: %w", err)
