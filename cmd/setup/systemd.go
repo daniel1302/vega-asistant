@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	generator "github.com/daniel1302/vega-asistant/generator/systemd"
+	service "github.com/daniel1302/vega-asistant/service/systemd"
 	"github.com/daniel1302/vega-asistant/utils"
 )
 
@@ -38,10 +38,10 @@ func init() {
 }
 
 func setupSystemd(logger *zap.SugaredLogger, visorHome string) error {
-	if err := generator.PrepareSystemd(logger, visorHome); err != nil {
+	if err := service.PrepareSystemd(logger, visorHome); err != nil {
 		return fmt.Errorf("failed to prepare systemd service: %w", err)
 	}
 
-	generator.PrintInstructions()
+	service.PrintInstructions()
 	return nil
 }

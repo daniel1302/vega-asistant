@@ -8,7 +8,7 @@ import (
 	"github.com/tcnksm/go-input"
 	"go.uber.org/zap"
 
-	generator "github.com/daniel1302/vega-asistant/generator/postgresql"
+	service "github.com/daniel1302/vega-asistant/service/postgresql"
 )
 
 type PostgresqlDockerComposeArgs struct {
@@ -34,17 +34,17 @@ func setupPostgresqlDockerCompose(logger *zap.SugaredLogger) error {
 		Writer: os.Stdout,
 		Reader: os.Stdin,
 	}
-	state := generator.NewStateMachine()
+	state := service.NewStateMachine()
 	err := state.Run(ui)
 	if err != nil {
 		return fmt.Errorf("failed to run state machine: %w", err)
 	}
 
-	if err := generator.PrepareDockerComposeFile(logger, state.Settings); err != nil {
+	if err := service.PrepareDockerComposeFile(logger, state.Settings); err != nil {
 		return fmt.Errorf("failed to prepare docker-compose.yaml: %w", err)
 	}
 
-	generator.PrintInstructions(state.Settings.Home)
+	service.PrintInstructions(state.Settings.Home)
 
 	return nil
 }

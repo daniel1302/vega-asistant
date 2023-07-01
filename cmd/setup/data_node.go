@@ -8,8 +8,8 @@ import (
 	"github.com/tcnksm/go-input"
 	"go.uber.org/zap"
 
-	generator "github.com/daniel1302/vega-asistant/generator/datanode"
 	"github.com/daniel1302/vega-asistant/network"
+	service "github.com/daniel1302/vega-asistant/service/datanode"
 )
 
 type SetupDataNodeArgs struct {
@@ -35,16 +35,21 @@ func dataNodeSetup(logger *zap.SugaredLogger) error {
 		Writer: os.Stdout,
 		Reader: os.Stdin,
 	}
-	state := generator.NewStateMachine()
+	state := service.NewStateMachine()
 	err := state.Run(ui, network.MainnetConfig())
 	if err != nil {
 		return fmt.Errorf("failed to generate data-node: %w", err)
 	}
 
-	generator, _ := generator.NewDataNodeGenerator(state.Settings, network.MainnetConfig())
-	if err := generator.Run(logger); err != nil {
+	svc, err := service.NewDataNodeGenerator(state.Settings, network.MainnetConfig())
+	if err != nil {
+		return fmt.Errorf("failed to start generator service: %w", err)
+	}
+	if err := svc.Run(logger); err != nil {
 		return fmt.Errorf("failed to setup data-node: %w", err)
 	}
+
+	service.PrintInstructions(state.Settings.VisorHome)
 
 	return nil
 }

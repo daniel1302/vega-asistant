@@ -5,7 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tcnksm/go-input"
 	"go.uber.org/zap"
+
+	service "github.com/daniel1302/vega-asistant/service/poststart"
 )
 
 type PostStartArgs struct {
@@ -25,6 +28,24 @@ var postStartCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	postStartArgs.SetupArgs = &setupArgs
+}
+
 func setupPostStart(logger *zap.SugaredLogger) error {
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+	state := service.NewStateMachine()
+	err := state.Run(ui)
+	if err != nil {
+		return fmt.Errorf("failed to run state machine: %w", err)
+	}
+
+	if err := service.UpdateConfig(logger, state.Settings.VegaHome, state.Settings.TendermintHome); err != nil {
+		return fmt.Errorf("failed to update configs: %s", err)
+	}
+
 	return nil
 }
