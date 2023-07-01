@@ -23,4 +23,6 @@ func init() {
 
 	RootCmd.AddCommand(dataNodeCmd)
 	RootCmd.AddCommand(postgresqlDockerComposeCmd)
+	RootCmd.AddCommand(systemdCmd)
+	RootCmd.AddCommand(postStartCmd)
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
+	"syscall"
 )
 
 func FileExists(filePath string) bool {
@@ -53,4 +55,36 @@ func CopyFile(srcFile, dstFile string) error {
 	}
 
 	return nil
+}
+
+// GetOwner function supports only on LINUX
+func GetFileOwner(filepath string) (string, string, error) {
+	fInfo, err := os.Stat(filepath)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to stat file(%s): %w", filepath, err)
+	}
+
+	if fInfo.Sys() == nil {
+		return "", "", fmt.Errorf("failed to get system info for file: %w", err)
+	}
+
+	sysInfo, ok := fInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		return "", "", fmt.Errorf("failed to convert file info to syscall.Stat_t")
+	}
+
+	ownerUid := sysInfo.Uid
+	ownerGid := sysInfo.Gid
+
+	userName, err := user.LookupId(fmt.Sprintf("%d", ownerUid))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find user for uid(%d): %w", ownerUid, err)
+	}
+
+	groupName, err := user.LookupGroupId(fmt.Sprintf("%d", ownerGid))
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find group for gid(%d): %w", ownerGid, err)
+	}
+
+	return userName.Username, groupName.Name, nil
 }
