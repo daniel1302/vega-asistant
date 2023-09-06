@@ -12,7 +12,7 @@ type NetworkConfig struct {
 
 func MainnetConfig() NetworkConfig {
 	return NetworkConfig{
-		GenesisVersion: "v0.72.14",
+		GenesisVersion: "v0.71.4",
 		Repository:     "vegaprotocol/vega",
 		GenesisURL:     "https://raw.githubusercontent.com/vegaprotocol/networks/master/mainnet1/genesis.json",
 		DataNodesRESTUrls: []string{
@@ -38,7 +38,7 @@ func MainnetConfig() NetworkConfig {
 		BootstrapPeers: []string{
 			"/dns/api1.vega.community/tcp/4001/ipfs/12D3KooWDZrusS1p2XyJDbCaWkVDCk2wJaKi6tNb4bjgSHo9yi5Q",
 			"/dns/api2.vega.community/tcp/4001/ipfs/12D3KooWEH9pQd6P7RgNEpwbRyavWcwrAdiy9etivXqQZzd7Jkrh",
-			"/dns/api3.vega.community/tcp/4001/ipfs/12D3KooWHSoYzEqSfUWEXfFbSnmRhWcP2WgZG2GRT8fzZzio5BTY",
+			"/dns/api3.vega.community/tcp/4001/ipfs/12D3KooWEH9pQd6P7RgNEpwbRyavWcwrAdiy9etivXqQZzd7Jkrh",
 		},
 	}
 }
