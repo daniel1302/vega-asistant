@@ -195,8 +195,8 @@ func printSummary(settings GenerateSettings) {
 		),
 	)
 	tbl.AddRow("SQL Database Name", settings.SQLCredentials.DatabaseName)
-	tbl.AddRow("Vega Version", settings.MainnetVersion)
-	tbl.AddRow("Vega Chain ID", settings.MainnetChainId)
+	tbl.AddRow("Vega Version", settings.VegaBinaryVersion)
+	tbl.AddRow("Vega Chain ID", settings.VegaChainId)
 
 	tbl.Print()
 	fmt.Println("")

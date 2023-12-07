@@ -52,13 +52,14 @@ type StateMachine struct {
 type GenerateSettings struct {
 	Mode StartupMode
 
-	VisorHome      string
-	VegaHome       string
-	TendermintHome string
-	DataNodeHome   string
-	MainnetVersion string
-	MainnetChainId string
-	SQLCredentials types.SQLCredentials
+	VisorHome          string
+	VegaHome           string
+	TendermintHome     string
+	DataNodeHome       string
+	VisorBinaryVersion string
+	VegaBinaryVersion  string
+	VegaChainId        string
+	SQLCredentials     types.SQLCredentials
 }
 
 func DefaultGenerateSettings() GenerateSettings {
@@ -208,12 +209,14 @@ STATE_RUN:
 				return fmt.Errorf("failed to get response for the /statistics endpoint from the mainnet servers: %w", err)
 			}
 			if state.Settings.Mode == StartFromBlock0 {
-				state.Settings.MainnetVersion = networkConfig.GenesisVersion
+				state.Settings.VegaBinaryVersion = networkConfig.GenesisVersion
+				state.Settings.VisorBinaryVersion = networkConfig.LowestVisorVersion
 			} else {
-				state.Settings.MainnetVersion = statisticsResponse.Statistics.AppVersion
+				state.Settings.VegaBinaryVersion = statisticsResponse.Statistics.AppVersion
+				state.Settings.VisorBinaryVersion = statisticsResponse.Statistics.AppVersion
 			}
 
-			state.Settings.MainnetChainId = statisticsResponse.Statistics.ChainID
+			state.Settings.VegaChainId = statisticsResponse.Statistics.ChainID
 			state.CurrentState = StateSummary
 
 		case StateSummary:
