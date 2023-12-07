@@ -212,6 +212,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 
 	tendermintConfig := map[string]interface{}{
 		"p2p.seeds":              strings.Join(gen.networkConfig.TendermintSeeds, ","),
+		"p2p.persistent_peers":   strings.Join(gen.networkConfig.TendermintPersistentPeers, ","),
 		"pex":                    true,
 		"statesync.enable":       false,
 		"statesync.rpc_servers":  strings.Join(gen.networkConfig.TendermintRPCServers, ","),
