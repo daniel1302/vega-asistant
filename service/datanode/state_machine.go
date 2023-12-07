@@ -32,6 +32,7 @@ const (
 
 const (
 	StateSelectStartupMode State = iota
+	StateSelectHowManyBlockToSync
 	StateSelectVisorHome
 	StateExistingVisorHome
 	StateSelectVegaHome
@@ -52,14 +53,15 @@ type StateMachine struct {
 type GenerateSettings struct {
 	Mode StartupMode
 
-	VisorHome          string
-	VegaHome           string
-	TendermintHome     string
-	DataNodeHome       string
-	VisorBinaryVersion string
-	VegaBinaryVersion  string
-	VegaChainId        string
-	SQLCredentials     types.SQLCredentials
+	VisorHome                   string
+	VegaHome                    string
+	TendermintHome              string
+	DataNodeHome                string
+	VisorBinaryVersion          string
+	VegaBinaryVersion           string
+	VegaChainId                 string
+	NetworkHistoryMinBlockCount string
+	SQLCredentials              types.SQLCredentials
 }
 
 func DefaultGenerateSettings() GenerateSettings {
@@ -105,6 +107,18 @@ STATE_RUN:
 				return fmt.Errorf("failed selecting startup mode: %w", err)
 			}
 			state.Settings.Mode = *mode
+			if *mode == StartFromNetworkHistory {
+				state.CurrentState = StateSelectHowManyBlockToSync
+			} else {
+				state.CurrentState = StateSelectVisorHome
+			}
+
+		case StateSelectHowManyBlockToSync:
+			networkHistoryMinBlockCount, err := uilib.AskInt(ui, "minimum blocks to sync from the network history", 10000)
+			if err != nil {
+				return fmt.Errorf("failed getting minimum blocks to sync from the network history: %w", err)
+			}
+			state.Settings.NetworkHistoryMinBlockCount = fmt.Sprint("%d", networkHistoryMinBlockCount)
 			state.CurrentState = StateSelectVisorHome
 
 		case StateSelectVisorHome:

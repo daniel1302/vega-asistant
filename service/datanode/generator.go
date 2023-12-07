@@ -192,16 +192,17 @@ func (gen *DataNodeGenerator) updateConfigs(
 	restartSnapshot *types.CoreSnapshot,
 ) error {
 	dataNodeConfig := map[string]interface{}{
-		"SQLStore.ConnectionConfig.Host":      gen.userSettings.SQLCredentials.Host,
-		"SQLStore.ConnectionConfig.Port":      gen.userSettings.SQLCredentials.Port,
-		"SQLStore.ConnectionConfig.Username":  gen.userSettings.SQLCredentials.User,
-		"SQLStore.ConnectionConfig.Password":  gen.userSettings.SQLCredentials.Pass,
-		"SQLStore.ConnectionConfig.Database":  gen.userSettings.SQLCredentials.DatabaseName,
-		"SQLStore.WipeOnStartup":              true,
-		"NetworkHistory.Store.BootstrapPeers": gen.networkConfig.BootstrapPeers,
-		"NetworkHistory.Initialise.Timeout":   "4h",
-		"API.RateLimit.Rate":                  300.0,
-		"API.RateLimit.Burst":                 1000,
+		"SQLStore.ConnectionConfig.Host":              gen.userSettings.SQLCredentials.Host,
+		"SQLStore.ConnectionConfig.Port":              gen.userSettings.SQLCredentials.Port,
+		"SQLStore.ConnectionConfig.Username":          gen.userSettings.SQLCredentials.User,
+		"SQLStore.ConnectionConfig.Password":          gen.userSettings.SQLCredentials.Pass,
+		"SQLStore.ConnectionConfig.Database":          gen.userSettings.SQLCredentials.DatabaseName,
+		"SQLStore.WipeOnStartup":                      true,
+		"NetworkHistory.Store.BootstrapPeers":         gen.networkConfig.BootstrapPeers,
+		"NetworkHistory.Initialise.MinimumBlockCount": gen.userSettings.NetworkHistoryMinBlockCount,
+		"NetworkHistory.Initialise.Timeout":           "4h",
+		"API.RateLimit.Rate":                          300.0,
+		"API.RateLimit.Burst":                         1000,
 	}
 
 	vegaConfig := map[string]interface{}{
