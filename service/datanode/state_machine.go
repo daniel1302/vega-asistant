@@ -60,7 +60,7 @@ type GenerateSettings struct {
 	VisorBinaryVersion          string
 	VegaBinaryVersion           string
 	VegaChainId                 string
-	NetworkHistoryMinBlockCount string
+	NetworkHistoryMinBlockCount int
 	SQLCredentials              types.SQLCredentials
 }
 
@@ -118,7 +118,7 @@ STATE_RUN:
 			if err != nil {
 				return fmt.Errorf("failed getting minimum blocks to sync from the network history: %w", err)
 			}
-			state.Settings.NetworkHistoryMinBlockCount = fmt.Sprint("%d", networkHistoryMinBlockCount)
+			state.Settings.NetworkHistoryMinBlockCount = networkHistoryMinBlockCount
 			state.CurrentState = StateSelectVisorHome
 
 		case StateSelectVisorHome:
