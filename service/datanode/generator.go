@@ -44,7 +44,7 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 	logger.Info("Downloading vega binary")
 	vegaBinaryPath, err := github.DownloadArtifact(
 		gen.networkConfig.Repository,
-		gen.userSettings.MainnetVersion,
+		gen.userSettings.VegaBinaryVersion,
 		outputDir,
 		github.ArtifactVega,
 	)
@@ -56,7 +56,7 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 	logger.Info("Downloading visor binary")
 	visorBinaryPath, err := github.DownloadArtifact(
 		gen.networkConfig.Repository,
-		gen.userSettings.MainnetVersion,
+		gen.userSettings.VisorBinaryVersion,
 		outputDir,
 		github.ArtifactVisor,
 	)
@@ -71,11 +71,11 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 		return fmt.Errorf("failed to check vega version: %w", err)
 	}
 	logger.Infof("Vega version is %s", vegaVersion)
-	visorVersion, err := utils.ExecuteBinary(visorBinaryPath, []string{"version"}, nil)
+	VisorBinaryVersion, err := utils.ExecuteBinary(visorBinaryPath, []string{"version"}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to check visor version: %w", err)
 	}
-	logger.Infof("Visor version is %s", visorVersion)
+	logger.Infof("Visor version is %s", VisorBinaryVersion)
 
 	if err := gen.initNode(logger, visorBinaryPath, vegaBinaryPath); err != nil {
 		return fmt.Errorf("failed to init vega node: %w", err)
@@ -126,7 +126,7 @@ func (gen *DataNodeGenerator) copyBinaries(
 	}
 	logger.Info("Visor binary copied")
 
-	version := gen.userSettings.MainnetVersion
+	version := gen.userSettings.VegaBinaryVersion
 	if gen.userSettings.Mode == StartFromBlock0 {
 		version = "genesis"
 	}
@@ -155,8 +155,8 @@ func (gen *DataNodeGenerator) copyBinaries(
 }
 
 func (gen *DataNodeGenerator) prepareVisorHome(logger *zap.SugaredLogger) error {
-	runConfigDirPath := filepath.Join(gen.userSettings.VisorHome, gen.userSettings.MainnetVersion)
-	version := gen.userSettings.MainnetVersion
+	runConfigDirPath := filepath.Join(gen.userSettings.VisorHome, gen.userSettings.VegaBinaryVersion)
+	version := gen.userSettings.VegaBinaryVersion
 
 	if gen.userSettings.Mode == StartFromBlock0 {
 		runConfigDirPath = filepath.Join(gen.userSettings.VisorHome, "genesis")
@@ -192,16 +192,18 @@ func (gen *DataNodeGenerator) updateConfigs(
 	restartSnapshot *types.CoreSnapshot,
 ) error {
 	dataNodeConfig := map[string]interface{}{
-		"SQLStore.ConnectionConfig.Host":      gen.userSettings.SQLCredentials.Host,
-		"SQLStore.ConnectionConfig.Port":      gen.userSettings.SQLCredentials.Port,
-		"SQLStore.ConnectionConfig.Username":  gen.userSettings.SQLCredentials.User,
-		"SQLStore.ConnectionConfig.Password":  gen.userSettings.SQLCredentials.Pass,
-		"SQLStore.ConnectionConfig.Database":  gen.userSettings.SQLCredentials.DatabaseName,
-		"SQLStore.WipeOnStartup":              true,
-		"NetworkHistory.Store.BootstrapPeers": gen.networkConfig.BootstrapPeers,
-		"NetworkHistory.Initialise.Timeout":   "4h",
-		"API.RateLimit.Rate":                  300.0,
-		"API.RateLimit.Burst":                 1000,
+		"SQLStore.ConnectionConfig.Host":              gen.userSettings.SQLCredentials.Host,
+		"SQLStore.ConnectionConfig.Port":              gen.userSettings.SQLCredentials.Port,
+		"SQLStore.ConnectionConfig.Username":          gen.userSettings.SQLCredentials.User,
+		"SQLStore.ConnectionConfig.Password":          gen.userSettings.SQLCredentials.Pass,
+		"SQLStore.ConnectionConfig.Database":          gen.userSettings.SQLCredentials.DatabaseName,
+		"SQLStore.WipeOnStartup":                      true,
+		"NetworkHistory.Store.BootstrapPeers":         gen.networkConfig.BootstrapPeers,
+		"NetworkHistory.Initialise.MinimumBlockCount": gen.userSettings.NetworkHistoryMinBlockCount,
+		"NetworkHistory.Initialise.Timeout":           "4h",
+		"NetworkHistory.RetryTimeout":                 "2m",
+		"API.RateLimit.Rate":                          300.0,
+		"API.RateLimit.Burst":                         1000,
 	}
 
 	vegaConfig := map[string]interface{}{
@@ -212,6 +214,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 
 	tendermintConfig := map[string]interface{}{
 		"p2p.seeds":              strings.Join(gen.networkConfig.TendermintSeeds, ","),
+		"p2p.persistent_peers":   strings.Join(gen.networkConfig.TendermintPersistentPeers, ","),
 		"pex":                    true,
 		"statesync.enable":       false,
 		"statesync.rpc_servers":  strings.Join(gen.networkConfig.TendermintRPCServers, ","),
@@ -447,7 +450,7 @@ func (gen *DataNodeGenerator) initNode(
 	logger.Info("Visor successfully initialized")
 
 	logger.Infof("Initializing data-node n the %s", gen.userSettings.DataNodeHome)
-	if err := vegacmd.InitDataNode(vegaBinary, gen.userSettings.DataNodeHome, gen.userSettings.MainnetChainId); err != nil {
+	if err := vegacmd.InitDataNode(vegaBinary, gen.userSettings.DataNodeHome, gen.userSettings.VegaChainId); err != nil {
 		return fmt.Errorf(
 			"failed to initialize data-node in %s: %w",
 			gen.userSettings.DataNodeHome,
