@@ -201,7 +201,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 		"NetworkHistory.Store.BootstrapPeers":         gen.networkConfig.BootstrapPeers,
 		"NetworkHistory.Initialise.MinimumBlockCount": gen.userSettings.NetworkHistoryMinBlockCount,
 		"NetworkHistory.Initialise.Timeout":           "4h",
-		"NetworkHistory.RetryTimeout":                 "2m",
+		"NetworkHistory.RetryTimeout":                 "15s",
 		"API.RateLimit.Rate":                          300.0,
 		"API.RateLimit.Burst":                         1000,
 	}
