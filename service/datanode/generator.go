@@ -252,7 +252,9 @@ func (gen *DataNodeGenerator) updateConfigs(
 			return fmt.Errorf("failed to convert trust block height from string to int: %w", err)
 		}
 
-		vegaConfig["Snapshot.StartHeight"] = trustHeight
+		// We cannot use statis StartHeight value because it is not working when we are syncing more blocks from the data-node
+		// Tendermint does not offer more than 10 snapshots.
+		// vegaConfig["Snapshot.StartHeight"] = trustHeight
 		dataNodeConfig["AutoInitialiseFromNetworkHistory"] = true
 		tendermintConfig["statesync.enable"] = true
 		tendermintConfig["statesync.trust_height"] = trustHeight
