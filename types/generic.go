@@ -1,9 +1,9 @@
 package types
 
 type SQLCredentials struct {
-	Host         string
-	User         string
-	Port         int
-	Pass         string
-	DatabaseName string
+	Host         string `toml:"host"`
+	User         string `toml:"user"`
+	Port         int    `toml:"port"`
+	Pass         string `toml:"pass"`
+	DatabaseName string `toml:"db-name"`
 }

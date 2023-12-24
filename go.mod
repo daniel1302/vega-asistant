@@ -1,10 +1,11 @@
 module github.com/daniel1302/vega-assistant
 
-go 1.19
+go 1.21
 
 require (
 	github.com/fatih/color v1.15.0
 	github.com/go-pg/pg/v11 v11.0.0-alpha.6
+	github.com/pelletier/go-toml v1.9.5-0.20220105141732-fed146406641
 	github.com/rodaine/table v1.1.0
 	github.com/spf13/cobra v1.2.1
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
@@ -31,7 +32,6 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
-	github.com/pelletier/go-toml v1.9.5-0.20220105141732-fed146406641 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
