@@ -1,0 +1,13 @@
+non-interactive = true
+visor-home = "/home/daniel/vegavisor_home"
+vega-home = "/home/daniel/vega_home"
+tendermint-home = "/home/daniel/tendermint_home"
+network-history-min-block-count = 10000
+remove-existing-file = true
+
+[sql-credentials]
+host = "localhost"
+user = "vega"
+port = 5432
+pass = "vega"
+db-name = "vega"
