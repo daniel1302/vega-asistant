@@ -367,7 +367,10 @@ func checkSQLCredentials(creds types.SQLCredentials) error {
 	_, err = db.QueryOne(
 		ctx,
 		pg.Scan(&timescaleVersion),
-		"SELECT installed_version FROM pg_available_extensions WHERE name = 'timescaledb'",
+		`SELECT installed_version AS extversion FROM pg_available_extensions WHERE name = 'timescaledb'
+		UNION ALL
+		SELECT extversion AS extversion FROM pg_extension WHERE extname = 'timescaledb'
+		LIMIT 1;`,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to check timescale extension version: %w", err)
