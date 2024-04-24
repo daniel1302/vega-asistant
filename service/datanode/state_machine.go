@@ -37,7 +37,6 @@ const (
 const (
 	StateSelectStartupMode State = iota
 	StateSelectHowManyBlockToSync
-	StateSelectNetworkHistoryEnabled
 	SelectDataRetention
 	StateSelectVisorHome
 	StateExistingVisorHome
@@ -61,7 +60,6 @@ type GenerateSettings struct {
 	Mode StartupMode
 
 	NonInteractive              bool   `toml:"non-interactive"`
-	NetworkHistoryEnabled       bool   `toml:"network-history-enabled"`
 	DataRetention               string `toml:"data-retention"`
 	VisorHome                   string `toml:"visor-home"`
 	VegaHome                    string `toml:"vega-home"`
@@ -77,12 +75,13 @@ type GenerateSettings struct {
 
 func DefaultGenerateSettings() *GenerateSettings {
 	return &GenerateSettings{
-		NonInteractive:      false,
-		Mode:                StartFromNetworkHistory,
-		VisorHome:           filepath.Join(utils.CurrentUserHomePath(), "vegavisor_home"),
-		VegaHome:            filepath.Join(utils.CurrentUserHomePath(), "vega_home"),
-		TendermintHome:      filepath.Join(utils.CurrentUserHomePath(), "tendermint_home"),
-		RemoveExistingFiles: false,
+		NonInteractive:              false,
+		Mode:                        StartFromNetworkHistory,
+		VisorHome:                   filepath.Join(utils.CurrentUserHomePath(), "vegavisor_home"),
+		VegaHome:                    filepath.Join(utils.CurrentUserHomePath(), "vega_home"),
+		TendermintHome:              filepath.Join(utils.CurrentUserHomePath(), "tendermint_home"),
+		RemoveExistingFiles:         false,
+		NetworkHistoryMinBlockCount: 100,
 
 		SQLCredentials: types.SQLCredentials{
 			Host:         "localhost",
@@ -143,42 +142,22 @@ STATE_RUN:
 			if state.Settings.Mode == StartFromNetworkHistory {
 				state.CurrentState = StateSelectHowManyBlockToSync
 			} else {
-				state.CurrentState = StateSelectNetworkHistoryEnabled
+				state.CurrentState = SelectDataRetention
 			}
 
 		case StateSelectHowManyBlockToSync:
 			if state.Settings.NonInteractive {
 				state.logger.Info("NonInteractive: Will sync %d blocks from the network history", state.Settings.NetworkHistoryMinBlockCount)
-				state.CurrentState = StateSelectNetworkHistoryEnabled
-
-				continue
-			}
-
-			networkHistoryMinBlockCount, err := uilib.AskInt(ui, "minimum blocks to sync from the network history", 10000)
-			if err != nil {
-				return fmt.Errorf("failed getting minimum blocks to sync from the network history: %w", err)
-			}
-			state.Settings.NetworkHistoryMinBlockCount = networkHistoryMinBlockCount
-			state.CurrentState = StateSelectNetworkHistoryEnabled
-
-		case StateSelectNetworkHistoryEnabled:
-			if state.Settings.NonInteractive {
-				if state.Settings.NetworkHistoryEnabled {
-					state.logger.Info("Network history will be enabled")
-				} else {
-					state.logger.Info("Network history will be disabled")
-				}
 				state.CurrentState = SelectDataRetention
 
 				continue
 			}
 
-			enabledNetworkHistoryResponse, err := AskNetworkHistoryEnabled(ui)
+			networkHistoryMinBlockCount, err := uilib.AskInt(ui, "minimum blocks to sync from the network history", state.Settings.NetworkHistoryMinBlockCount)
 			if err != nil {
-				return fmt.Errorf("failed getting response to enable network history: %w", err)
+				return fmt.Errorf("failed getting minimum blocks to sync from the network history: %w", err)
 			}
-			state.Settings.NetworkHistoryEnabled = enabledNetworkHistoryResponse == uilib.AnswerYes
-
+			state.Settings.NetworkHistoryMinBlockCount = networkHistoryMinBlockCount
 			state.CurrentState = SelectDataRetention
 
 		case SelectDataRetention:
@@ -198,6 +177,7 @@ STATE_RUN:
 				return fmt.Errorf("failed getting retention policy: %w", err)
 			}
 			state.Settings.DataRetention = retentionPolicy
+			state.CurrentState = StateSelectVisorHome
 
 		case StateSelectVisorHome:
 			if state.Settings.NonInteractive {
@@ -410,10 +390,7 @@ func checkSQLCredentials(creds types.SQLCredentials) error {
 	_, err = db.QueryOne(
 		ctx,
 		pg.Scan(&timescaleVersion),
-		`SELECT installed_version AS extversion FROM pg_available_extensions WHERE name = 'timescaledb'
-		UNION ALL
-		SELECT extversion AS extversion FROM pg_extension WHERE extname = 'timescaledb'
-		LIMIT 1;`,
+		`SELECT COALESCE(installed_version, default_version) AS extversion FROM pg_available_extensions WHERE name = 'timescaledb' LIMIT 1;`,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to check timescale extension version: %w", err)

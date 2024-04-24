@@ -10,7 +10,6 @@ import (
 	input "github.com/tcnksm/go-input"
 
 	"github.com/daniel1302/vega-assistant/types"
-	"github.com/daniel1302/vega-assistant/uilib"
 	"github.com/daniel1302/vega-assistant/vega"
 )
 
@@ -47,24 +46,20 @@ func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, er
 	return &result, nil
 }
 
-func AskNetworkHistoryEnabled(ui *input.UI) (uilib.YesNoAnswer, error) {
-	fmt.Println(`
-The network history is the data node feature allowing start a new data node 
-from one of the latest blocks and sync data faster. If you enable it, you can 
-share your node peer info with other people and allow then to use your node 
-as the data feed source. It requires more disk space on your server as copy 
-of all the data persist on the disk.
-
-Don't you know if you need the network history? Do not enable it.`)
-	return uilib.AskYesNo(ui, "do you want to enable network-history feature?", uilib.AnswerNo)
-}
-
 func AskRetentionPolicy(ui *input.UI) (string, error) {
-	ui.Ask("Retention policy. Possible values: standard, archival, 1 (day|month|year), 3 (days|months|years), etc...", &input.Options{
+	val, err := ui.Ask(`Retention policy. Possible values: 
+- standard, 
+- forever, 
+- 1 day|month|year),
+- 3 (days|months|years), etc...`, &input.Options{
 		Default:  "standard",
 		Required: true,
 		Loop:     true,
 		ValidateFunc: func(s string) error {
+			if s == "" {
+				return nil
+			}
+
 			if !vega.IsRetentionPolicyValid(s) {
 				return fmt.Errorf("invalid retention policy")
 			}
@@ -72,6 +67,12 @@ func AskRetentionPolicy(ui *input.UI) (string, error) {
 			return nil
 		},
 	})
+
+	if val == "" {
+		return "standard", nil
+	}
+
+	return val, err
 }
 
 func AskSQLCredentials(
@@ -209,6 +210,7 @@ func printSummary(settings GenerateSettings) {
 	} else {
 		tbl.AddRow("Mode", "Start from Network History")
 	}
+	tbl.AddRow("Retention policy", settings.DataRetention)
 	tbl.AddRow("Visor Home", settings.VisorHome)
 	tbl.AddRow("Vega Home", settings.VegaHome)
 	tbl.AddRow("Tendermint Home", settings.TendermintHome)
