@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/daniel1302/vega-assistant/types"
 )
@@ -22,7 +23,10 @@ func httpCall(requestURL string, endpoint string) ([]byte, error) {
 		return nil, fmt.Errorf("could not create request: %w", err)
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	client.Timeout = 5 * time.Second
+
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error making http request: %w", err)
 	}

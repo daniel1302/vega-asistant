@@ -10,6 +10,7 @@ import (
 	input "github.com/tcnksm/go-input"
 
 	"github.com/daniel1302/vega-assistant/types"
+	"github.com/daniel1302/vega-assistant/vega"
 )
 
 func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, error) {
@@ -43,6 +44,35 @@ func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, er
 	}
 
 	return &result, nil
+}
+
+func AskRetentionPolicy(ui *input.UI) (string, error) {
+	val, err := ui.Ask(`Retention policy. Possible values: 
+- standard, 
+- forever, 
+- 1 day|month|year),
+- 3 (days|months|years), etc...`, &input.Options{
+		Default:  "standard",
+		Required: true,
+		Loop:     true,
+		ValidateFunc: func(s string) error {
+			if s == "" {
+				return nil
+			}
+
+			if !vega.IsRetentionPolicyValid(s) {
+				return fmt.Errorf("invalid retention policy")
+			}
+
+			return nil
+		},
+	})
+
+	if val == "" {
+		return "standard", nil
+	}
+
+	return val, err
 }
 
 func AskSQLCredentials(
@@ -180,6 +210,7 @@ func printSummary(settings GenerateSettings) {
 	} else {
 		tbl.AddRow("Mode", "Start from Network History")
 	}
+	tbl.AddRow("Retention policy", settings.DataRetention)
 	tbl.AddRow("Visor Home", settings.VisorHome)
 	tbl.AddRow("Vega Home", settings.VegaHome)
 	tbl.AddRow("Tendermint Home", settings.TendermintHome)

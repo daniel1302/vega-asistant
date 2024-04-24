@@ -19,7 +19,7 @@ func MainnetConfig() NetworkConfig {
 		Repository:         "vegaprotocol/vega",
 		GenesisURL:         "https://raw.githubusercontent.com/vegaprotocol/networks/master/mainnet1/genesis.json",
 		DataNodesRESTUrls: []string{
-			"https://api0.vega.community",
+			// "https://api0.vega.community",
 			"https://api1.vega.community",
 			"https://api2.vega.community",
 			"https://api3.vega.community",
@@ -41,7 +41,7 @@ func MainnetConfig() NetworkConfig {
 			"9de3ca2bbeb62d165d39acbbcf174e7ac3a6b7c9@be3.vega.community:26656",
 		},
 		TendermintRPCServers: []string{
-			"api0.vega.community:26657",
+			// "api0.vega.community:26657",
 			"api1.vega.community:26657",
 			"api2.vega.community:26657",
 			"api3.vega.community:26657",

@@ -20,6 +20,7 @@ import (
 	"github.com/daniel1302/vega-assistant/types"
 	"github.com/daniel1302/vega-assistant/uilib"
 	"github.com/daniel1302/vega-assistant/utils"
+	"github.com/daniel1302/vega-assistant/vega"
 	"github.com/daniel1302/vega-assistant/vegaapi"
 )
 
@@ -36,6 +37,7 @@ const (
 const (
 	StateSelectStartupMode State = iota
 	StateSelectHowManyBlockToSync
+	SelectDataRetention
 	StateSelectVisorHome
 	StateExistingVisorHome
 	StateSelectVegaHome
@@ -58,6 +60,7 @@ type GenerateSettings struct {
 	Mode StartupMode
 
 	NonInteractive              bool   `toml:"non-interactive"`
+	DataRetention               string `toml:"data-retention"`
 	VisorHome                   string `toml:"visor-home"`
 	VegaHome                    string `toml:"vega-home"`
 	TendermintHome              string `toml:"tendermint-home"`
@@ -72,12 +75,13 @@ type GenerateSettings struct {
 
 func DefaultGenerateSettings() *GenerateSettings {
 	return &GenerateSettings{
-		NonInteractive:      false,
-		Mode:                StartFromNetworkHistory,
-		VisorHome:           filepath.Join(utils.CurrentUserHomePath(), "vegavisor_home"),
-		VegaHome:            filepath.Join(utils.CurrentUserHomePath(), "vega_home"),
-		TendermintHome:      filepath.Join(utils.CurrentUserHomePath(), "tendermint_home"),
-		RemoveExistingFiles: false,
+		NonInteractive:              false,
+		Mode:                        StartFromNetworkHistory,
+		VisorHome:                   filepath.Join(utils.CurrentUserHomePath(), "vegavisor_home"),
+		VegaHome:                    filepath.Join(utils.CurrentUserHomePath(), "vega_home"),
+		TendermintHome:              filepath.Join(utils.CurrentUserHomePath(), "tendermint_home"),
+		RemoveExistingFiles:         false,
+		NetworkHistoryMinBlockCount: 100,
 
 		SQLCredentials: types.SQLCredentials{
 			Host:         "localhost",
@@ -138,22 +142,41 @@ STATE_RUN:
 			if state.Settings.Mode == StartFromNetworkHistory {
 				state.CurrentState = StateSelectHowManyBlockToSync
 			} else {
-				state.CurrentState = StateSelectVisorHome
+				state.CurrentState = SelectDataRetention
 			}
 
 		case StateSelectHowManyBlockToSync:
 			if state.Settings.NonInteractive {
 				state.logger.Info("NonInteractive: Will sync %d blocks from the network history", state.Settings.NetworkHistoryMinBlockCount)
-				state.CurrentState = StateSelectVisorHome
+				state.CurrentState = SelectDataRetention
 
 				continue
 			}
 
-			networkHistoryMinBlockCount, err := uilib.AskInt(ui, "minimum blocks to sync from the network history", 10000)
+			networkHistoryMinBlockCount, err := uilib.AskInt(ui, "minimum blocks to sync from the network history", state.Settings.NetworkHistoryMinBlockCount)
 			if err != nil {
 				return fmt.Errorf("failed getting minimum blocks to sync from the network history: %w", err)
 			}
 			state.Settings.NetworkHistoryMinBlockCount = networkHistoryMinBlockCount
+			state.CurrentState = SelectDataRetention
+
+		case SelectDataRetention:
+			if state.Settings.NonInteractive {
+				if !vega.IsRetentionPolicyValid(state.Settings.DataRetention) {
+					state.logger.Info("Data node retention: forever")
+				} else {
+					state.logger.Infof("Data node retention: %s", state.Settings.DataRetention)
+				}
+
+				state.CurrentState = StateSelectVisorHome
+				continue
+			}
+
+			retentionPolicy, err := AskRetentionPolicy(ui)
+			if err != nil {
+				return fmt.Errorf("failed getting retention policy: %w", err)
+			}
+			state.Settings.DataRetention = retentionPolicy
 			state.CurrentState = StateSelectVisorHome
 
 		case StateSelectVisorHome:
@@ -367,7 +390,7 @@ func checkSQLCredentials(creds types.SQLCredentials) error {
 	_, err = db.QueryOne(
 		ctx,
 		pg.Scan(&timescaleVersion),
-		"SELECT installed_version FROM pg_available_extensions WHERE name = 'timescaledb'",
+		`SELECT COALESCE(installed_version, default_version) AS extversion FROM pg_available_extensions WHERE name = 'timescaledb' LIMIT 1;`,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to check timescale extension version: %w", err)

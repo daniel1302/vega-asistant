@@ -192,6 +192,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 	restartSnapshot *types.CoreSnapshot,
 ) error {
 	dataNodeConfig := map[string]interface{}{
+		"SQLStore.RetentionPeriod":                    gen.userSettings.DataRetention,
 		"SQLStore.ConnectionConfig.Host":              gen.userSettings.SQLCredentials.Host,
 		"SQLStore.ConnectionConfig.Port":              gen.userSettings.SQLCredentials.Port,
 		"SQLStore.ConnectionConfig.Username":          gen.userSettings.SQLCredentials.User,
@@ -204,6 +205,8 @@ func (gen *DataNodeGenerator) updateConfigs(
 		"NetworkHistory.RetryTimeout":                 "15s",
 		"API.RateLimit.Rate":                          300.0,
 		"API.RateLimit.Burst":                         1000,
+		// This is controversial for vega but most of the people does not care about network history
+		"NetworkHistory.Publish": false,
 	}
 
 	vegaConfig := map[string]interface{}{
