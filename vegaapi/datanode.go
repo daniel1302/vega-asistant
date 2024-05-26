@@ -330,7 +330,7 @@ func (n *NetworkAPI) getNetworkHistorySegments(ctx context.Context, endpoint str
 		return nil, fmt.Errorf("failed to create request history segments api request for %s: %w", endpoint, err)
 	}
 
-	if err := n.httpCall(req, result); err != nil {
+	if err := n.httpCall(req, &result); err != nil {
 		return nil, fmt.Errorf("failed to get network history segments: %w", err)
 	}
 

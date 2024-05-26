@@ -96,7 +96,7 @@ func DefaultGenerateSettings() *GenerateSettings {
 func ReadGeneratorSettingsFromFile(filePath string) (*GenerateSettings, error) {
 	tomlTree, err := toml.LoadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config file: %w")
+		return nil, fmt.Errorf("failed to load config file: %w", err)
 	}
 
 	result := &GenerateSettings{}
@@ -338,7 +338,15 @@ STATE_RUN:
 				state.Settings.VegaBinaryVersion = networkConfig.GenesisVersion
 				state.Settings.VisorBinaryVersion = networkConfig.LowestVisorVersion
 			} else {
-				state.Settings.VegaBinaryVersion = statisticsResponse.AppVersion
+				releaseVersion := statisticsResponse.AppVersion
+
+				for _, binaryOverride := range networkConfig.BinariesOverride {
+					if binaryOverride.OldVersion == releaseVersion && statisticsResponse.BlockHeight >= binaryOverride.Block {
+						releaseVersion = binaryOverride.NewVersion
+					}
+				}
+
+				state.Settings.VegaBinaryVersion = releaseVersion
 				state.Settings.VisorBinaryVersion = statisticsResponse.AppVersion
 			}
 

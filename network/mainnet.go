@@ -2,6 +2,12 @@ package network
 
 import "github.com/daniel1302/vega-assistant/types"
 
+type BinaryOverride struct {
+	OldVersion string
+	NewVersion string
+	Block      uint64
+}
+
 type NetworkConfig struct {
 	GenesisVersion            string
 	Repository                string
@@ -12,6 +18,7 @@ type NetworkConfig struct {
 	BootstrapPeers            []types.EndpointWithVegaREST
 	TendermintRPCServers      []types.EndpointWithVegaREST
 	TendermintPersistentPeers []string
+	BinariesOverride          []BinaryOverride
 }
 
 func MainnetConfig() NetworkConfig {
@@ -65,6 +72,13 @@ func MainnetConfig() NetworkConfig {
 			// "4f26ec99d3cf6f0e9e973c0a5f3da87d89ec6677@api2.vega.community:26656",
 			// "eafacd11af53cd9fb2a14eada53485779cbee4ab@api3.vega.community:26656",
 			// "9de3ca2bbeb62d165d39acbbcf174e7ac3a6b7c9@be3.vega.community:26656",
+		},
+		BinariesOverride: []BinaryOverride{
+			{
+				OldVersion: "v0.75.8",
+				NewVersion: "v0.75.8-fix.2",
+				Block:      47865000,
+			},
 		},
 	}
 }
