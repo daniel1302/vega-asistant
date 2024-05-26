@@ -10,6 +10,7 @@ import (
 
 	"github.com/daniel1302/vega-assistant/network"
 	service "github.com/daniel1302/vega-assistant/service/datanode"
+	"github.com/daniel1302/vega-assistant/vegaapi"
 )
 
 type SetupDataNodeArgs struct {
@@ -50,12 +51,17 @@ func dataNodeSetup(logger *zap.SugaredLogger, configFile string) error {
 		config = service.DefaultGenerateSettings()
 	}
 
+	apiClient, err := vegaapi.NewNetworkAPI(network.MainnetConfig().DataNodesRESTUrls, true, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create vega network api client: %w", err)
+	}
+
 	state := service.NewStateMachine(logger, *config)
-	if err := state.Run(ui, network.MainnetConfig()); err != nil {
+	if err := state.Run(apiClient, ui, network.MainnetConfig()); err != nil {
 		return fmt.Errorf("failed to generate data-node: %w", err)
 	}
 
-	svc, err := service.NewDataNodeGenerator(state.Settings, network.MainnetConfig())
+	svc, err := service.NewDataNodeGenerator(apiClient, state.Settings, network.MainnetConfig())
 	if err != nil {
 		return fmt.Errorf("failed to start generator service: %w", err)
 	}

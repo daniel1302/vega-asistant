@@ -124,7 +124,7 @@ func (state StateMachine) Dump() string {
 	return string(result)
 }
 
-func (state *StateMachine) Run(ui *input.UI, networkConfig network.NetworkConfig) error {
+func (state *StateMachine) Run(apiClient *vegaapi.NetworkAPI, ui *input.UI, networkConfig network.NetworkConfig) error {
 STATE_RUN:
 	for {
 		switch state.CurrentState {
@@ -329,19 +329,20 @@ STATE_RUN:
 			state.CurrentState = StateCheckLatestVersion
 
 		case StateCheckLatestVersion:
-			statisticsResponse, err := vegaapi.Statistics(networkConfig.DataNodesRESTUrls)
+			statisticsResponse, err := apiClient.Statistics(context.Background())
 			if err != nil {
 				return fmt.Errorf("failed to get response for the /statistics endpoint from the mainnet servers: %w", err)
 			}
+
 			if state.Settings.Mode == StartFromBlock0 {
 				state.Settings.VegaBinaryVersion = networkConfig.GenesisVersion
 				state.Settings.VisorBinaryVersion = networkConfig.LowestVisorVersion
 			} else {
-				state.Settings.VegaBinaryVersion = statisticsResponse.Statistics.AppVersion
-				state.Settings.VisorBinaryVersion = statisticsResponse.Statistics.AppVersion
+				state.Settings.VegaBinaryVersion = statisticsResponse.AppVersion
+				state.Settings.VisorBinaryVersion = statisticsResponse.AppVersion
 			}
 
-			state.Settings.VegaChainId = statisticsResponse.Statistics.ChainID
+			state.Settings.VegaChainId = statisticsResponse.ChainID
 			state.CurrentState = StateSummary
 
 		case StateSummary:

@@ -1,10 +1,26 @@
 package types
 
-type VegaStatistics struct {
+import "time"
+
+type VegaRawStatistics struct {
 	Statistics struct {
-		ChainID    string `json:"chainId"`
-		AppVersion string `json:"appVersion"`
+		ChainID     string `json:"chainId"`
+		AppVersion  string `json:"appVersion"`
+		CurrentTime string
+		VegaTime    string
+		BlockHeight string
 	} `json:"statistics"`
+}
+
+type VegaStatistics struct {
+	BlockHeight    uint64
+	DataNodeHeight uint64
+
+	CurrentTime time.Time
+	VegaTime    time.Time
+
+	ChainID    string
+	AppVersion string
 }
 
 type CoreSnapshot struct {
