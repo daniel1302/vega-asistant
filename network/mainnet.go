@@ -1,5 +1,13 @@
 package network
 
+import "github.com/daniel1302/vega-assistant/types"
+
+type BinaryOverride struct {
+	OldVersion string
+	NewVersion string
+	Block      uint64
+}
+
 type NetworkConfig struct {
 	GenesisVersion            string
 	Repository                string
@@ -7,9 +15,10 @@ type NetworkConfig struct {
 	LowestVisorVersion        string
 	DataNodesRESTUrls         []string
 	TendermintSeeds           []string
-	BootstrapPeers            []string
-	TendermintRPCServers      []string
+	BootstrapPeers            []types.EndpointWithVegaREST
+	TendermintRPCServers      []types.EndpointWithVegaREST
 	TendermintPersistentPeers []string
+	BinariesOverride          []BinaryOverride
 }
 
 func MainnetConfig() NetworkConfig {
@@ -40,16 +49,17 @@ func MainnetConfig() NetworkConfig {
 			"eafacd11af53cd9fb2a14eada53485779cbee4ab@api3.vega.community:26656",
 			"9de3ca2bbeb62d165d39acbbcf174e7ac3a6b7c9@be3.vega.community:26656",
 		},
-		TendermintRPCServers: []string{
-			// "api0.vega.community:26657",
-			"api1.vega.community:26657",
-			"api2.vega.community:26657",
-			"api3.vega.community:26657",
+		TendermintRPCServers: []types.EndpointWithVegaREST{
+			{REST: "https://api0.vega.community", Endpoint: "api0.vega.community:26657"},
+			{REST: "https://api1.vega.community", Endpoint: "api1.vega.community:26657"},
+			{REST: "https://api2.vega.community", Endpoint: "api2.vega.community:26657"},
+			{REST: "https://api3.vega.community", Endpoint: "api3.vega.community:26657"},
 		},
-		BootstrapPeers: []string{
-			"/dns/api1.vega.community/tcp/4001/ipfs/12D3KooWDZrusS1p2XyJDbCaWkVDCk2wJaKi6tNb4bjgSHo9yi5Q",
-			"/dns/api2.vega.community/tcp/4001/ipfs/12D3KooWEH9pQd6P7RgNEpwbRyavWcwrAdiy9etivXqQZzd7Jkrh",
-			"/dns/api3.vega.community/tcp/4001/ipfs/12D3KooWEH9pQd6P7RgNEpwbRyavWcwrAdiy9etivXqQZzd7Jkrh",
+		BootstrapPeers: []types.EndpointWithVegaREST{
+			{REST: "https://api0.vega.community", Endpoint: "/dns/api0.vega.community/tcp/4001/ipfs/12D3KooWAHkKJfX7rt1pAuGebP9g2BGTT5w7peFGyWd2QbpyZwaw"},
+			{REST: "https://api1.vega.community", Endpoint: "/dns/api1.vega.community/tcp/4001/ipfs/12D3KooWDZrusS1p2XyJDbCaWkVDCk2wJaKi6tNb4bjgSHo9yi5Q"},
+			{REST: "https://api2.vega.community", Endpoint: "/dns/api2.vega.community/tcp/4001/ipfs/12D3KooWEH9pQd6P7RgNEpwbRyavWcwrAdiy9etivXqQZzd7Jkrh"},
+			{REST: "https://api3.vega.community", Endpoint: "/dns/api3.vega.community/tcp/4001/ipfs/12D3KooWHSoYzEqSfUWEXfFbSnmRhWcP2WgZG2GRT8fzZzio5BTY"},
 		},
 		TendermintPersistentPeers: []string{
 			// "55b8ac477ddd6c0c9bae411dfa6ebfb46e7b4022@veganodeoperator.com:26656",
@@ -62,6 +72,13 @@ func MainnetConfig() NetworkConfig {
 			// "4f26ec99d3cf6f0e9e973c0a5f3da87d89ec6677@api2.vega.community:26656",
 			// "eafacd11af53cd9fb2a14eada53485779cbee4ab@api3.vega.community:26656",
 			// "9de3ca2bbeb62d165d39acbbcf174e7ac3a6b7c9@be3.vega.community:26656",
+		},
+		BinariesOverride: []BinaryOverride{
+			{
+				OldVersion: "v0.75.8",
+				NewVersion: "v0.75.8-fix.2",
+				Block:      47865000,
+			},
 		},
 	}
 }

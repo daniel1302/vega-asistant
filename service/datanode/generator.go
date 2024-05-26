@@ -1,6 +1,7 @@
 package datanode
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -20,15 +21,18 @@ import (
 )
 
 type DataNodeGenerator struct {
+	vegaApi       *vegaapi.NetworkAPI
 	userSettings  GenerateSettings
 	networkConfig network.NetworkConfig
 }
 
 func NewDataNodeGenerator(
+	vegaApi *vegaapi.NetworkAPI,
 	settings GenerateSettings,
 	networkConfig network.NetworkConfig,
 ) (*DataNodeGenerator, error) {
 	return &DataNodeGenerator{
+		vegaApi:       vegaApi,
 		userSettings:  settings,
 		networkConfig: networkConfig,
 	}, nil
@@ -191,6 +195,32 @@ func (gen *DataNodeGenerator) updateConfigs(
 	logger *zap.SugaredLogger,
 	restartSnapshot *types.CoreSnapshot,
 ) error {
+	healthyTendermintRPCServers, err := gen.vegaApi.HealthyEndpoints(context.Background(), gen.networkConfig.TendermintRPCServers)
+	if err != nil {
+		return fmt.Errorf("failed to find healthy tendermint rpc servers: %w", err)
+	}
+
+	if len(healthyTendermintRPCServers) < 1 {
+		return fmt.Errorf("there is no healthy rpc server")
+	}
+
+	if len(healthyTendermintRPCServers) == 1 {
+		healthyTendermintRPCServers = append(healthyTendermintRPCServers, healthyTendermintRPCServers[0])
+	}
+
+	healthyBootstrapPeers, err := gen.vegaApi.HealthyEndpoints(context.Background(), gen.networkConfig.BootstrapPeers)
+	if err != nil {
+		return fmt.Errorf("failed to find healthy network history bootstrap peers: %w", err)
+	}
+
+	if len(healthyBootstrapPeers) < 1 {
+		return fmt.Errorf("no healthy network history bootstrap peer")
+	}
+
+	if len(healthyBootstrapPeers) == 1 {
+		healthyBootstrapPeers = append(healthyBootstrapPeers, healthyBootstrapPeers[0])
+	}
+
 	dataNodeConfig := map[string]interface{}{
 		"SQLStore.RetentionPeriod":                    gen.userSettings.DataRetention,
 		"SQLStore.ConnectionConfig.Host":              gen.userSettings.SQLCredentials.Host,
@@ -199,7 +229,7 @@ func (gen *DataNodeGenerator) updateConfigs(
 		"SQLStore.ConnectionConfig.Password":          gen.userSettings.SQLCredentials.Pass,
 		"SQLStore.ConnectionConfig.Database":          gen.userSettings.SQLCredentials.DatabaseName,
 		"SQLStore.WipeOnStartup":                      true,
-		"NetworkHistory.Store.BootstrapPeers":         gen.networkConfig.BootstrapPeers,
+		"NetworkHistory.Store.BootstrapPeers":         healthyBootstrapPeers,
 		"NetworkHistory.Initialise.MinimumBlockCount": gen.userSettings.NetworkHistoryMinBlockCount,
 		"NetworkHistory.Initialise.Timeout":           "4h",
 		"NetworkHistory.RetryTimeout":                 "15s",
@@ -218,9 +248,9 @@ func (gen *DataNodeGenerator) updateConfigs(
 	tendermintConfig := map[string]interface{}{
 		"p2p.seeds":              strings.Join(gen.networkConfig.TendermintSeeds, ","),
 		"p2p.persistent_peers":   strings.Join(gen.networkConfig.TendermintPersistentPeers, ","),
-		"pex":                    true,
+		"p2p.pex":                true,
 		"statesync.enable":       false,
-		"statesync.rpc_servers":  strings.Join(gen.networkConfig.TendermintRPCServers, ","),
+		"statesync.rpc_servers":  strings.Join(healthyTendermintRPCServers, ","),
 		"statesync.trust_period": "672h0m0s",
 	}
 
@@ -318,7 +348,7 @@ func (gen *DataNodeGenerator) selectSnapshotForRestart(
 	}
 
 	logger.Info("Fetching network snapshots")
-	snapshots, err := vegaapi.Snapshots(gen.networkConfig.DataNodesRESTUrls)
+	snapshots, err := gen.vegaApi.Snapshots(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get core snapshot for trusted block: %w", err)
 	}
@@ -332,7 +362,7 @@ func (gen *DataNodeGenerator) selectSnapshotForRestart(
 	}
 
 	logger.Info("Fetching network history segments")
-	segments, err := vegaapi.NetworkHistorySegments(gen.networkConfig.DataNodesRESTUrls)
+	segments, err := gen.vegaApi.NetworkHistorySegments(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network-history segments: %w", err)
 	}
