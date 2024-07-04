@@ -93,7 +93,7 @@ func (gen *DataNodeGenerator) Run(logger *zap.SugaredLogger) error {
 		return fmt.Errorf("failed to copy binaries to visor home: %w", err)
 	}
 
-	restartSnapshot, err := gen.selectSnapshotForRestart(logger)
+	restartSnapshot, err := gen.selectSnapshotForRestart(context.Background(), logger)
 	if err != nil {
 		return fmt.Errorf("failed to select snapshot for restart: %w", err)
 	}
@@ -341,10 +341,16 @@ func (gen *DataNodeGenerator) updateConfigs(
 }
 
 func (gen *DataNodeGenerator) selectSnapshotForRestart(
+	ctx context.Context,
 	logger *zap.SugaredLogger,
 ) (*types.CoreSnapshot, error) {
 	if gen.userSettings.Mode != StartFromNetworkHistory {
 		return &types.CoreSnapshot{}, nil
+	}
+
+	stats, err := gen.vegaApi.Statistics(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get statistics: %w", err)
 	}
 
 	logger.Info("Fetching network snapshots")
@@ -362,7 +368,7 @@ func (gen *DataNodeGenerator) selectSnapshotForRestart(
 	}
 
 	logger.Info("Fetching network history segments")
-	segments, err := gen.vegaApi.NetworkHistorySegments(context.Background())
+	segments, err := gen.vegaApi.NetworkHistorySegments(context.Background(), stats.BlockHeight)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network-history segments: %w", err)
 	}

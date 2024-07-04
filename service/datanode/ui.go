@@ -48,10 +48,9 @@ func SelectStartupMode(ui *input.UI, defaultValue StartupMode) (*StartupMode, er
 
 func AskRetentionPolicy(ui *input.UI) (string, error) {
 	val, err := ui.Ask(`Retention policy. Possible values: 
-- standard, 
-- forever, 
-- 1 day|month|year),
-- 3 (days|months|years), etc...`, &input.Options{
+- standard - ~ 1 month of data retention, 
+- forever - full archival node, 
+- lite - ~ 1 day retention for most of the tables`, &input.Options{
 		Default:  "standard",
 		Required: true,
 		Loop:     true,
@@ -70,6 +69,10 @@ func AskRetentionPolicy(ui *input.UI) (string, error) {
 
 	if val == "" {
 		return "standard", nil
+	}
+
+	if val == "lite" {
+		return "1 day", nil // data-node requires this name
 	}
 
 	return val, err
