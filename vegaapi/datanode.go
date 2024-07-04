@@ -62,7 +62,6 @@ func NewNetworkAPI(apiREST []string, safeOnly bool, client *http.Client) (*Netwo
 }
 
 func (n *NetworkAPI) HealthyEndpoints(ctx context.Context, endpoints []types.EndpointWithVegaREST) ([]string, error) {
-
 	latestStatistics, err := getLatestStatistics(ctx, n.httpClient, n.apiREST)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network statistics for the network head: %w", err)
@@ -112,15 +111,44 @@ func (n *NetworkAPI) Snapshots(ctx context.Context) (*types.CoreSnapshots, error
 	return nil, resErr
 }
 
-func (n *NetworkAPI) NetworkHistorySegments(ctx context.Context) (*types.NetworkHistorySegments, error) {
+func (n *NetworkAPI) NetworkHistorySegments(ctx context.Context, networkHight uint64) (*types.NetworkHistorySegments, error) {
+	const segmentThreshold = 350
+
 	if len(n.apiREST) < 1 {
 		return nil, fmt.Errorf("failed to get statistics for network: no endpoint available")
 	}
+
+	// type NetworkHistorySegment struct {
+	// 	FromHeight       string `json:"fromHeight"`
+	// 	ToHeight         string `json:"toHeight"`
+	// 	HistorySegmentId string `json:"historySegmentId"`
+	// }
+
+	// type NetworkHistorySegments struct {
+	// 	Segments []NetworkHistorySegment `json:"segments"`
+	// }
+
 	var resErr error
 	for _, endpoint := range n.apiREST {
 		res, err := n.getNetworkHistorySegments(ctx, endpoint)
+
 		if err != nil {
 			resErr = multierror.Append(resErr, err)
+			continue
+		}
+
+		// Make sure there is segment close to the current network head block
+		foundHeadCloseSegment := false
+		for _, segment := range res.Segments {
+			if utils.MustUint64(segment.ToHeight) < networkHight-segmentThreshold {
+				continue
+			}
+
+			foundHeadCloseSegment = true
+			break
+		}
+		if !foundHeadCloseSegment {
+			resErr = multierror.Append(resErr, fmt.Errorf("the latest data-node segment for node %s not found", endpoint))
 			continue
 		}
 
