@@ -3,7 +3,7 @@ package vega
 import "regexp"
 
 func IsRetentionPolicyValid(policy string) bool {
-	if policy == "standard" || policy == "forever" {
+	if policy == "standard" || policy == "forever" || policy == "1 day" {
 		return true
 	}
 
